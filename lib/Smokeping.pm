@@ -3843,6 +3843,12 @@ DOC
                                 my @mandatory = @{$targetvars->{_mandatory}};
                                 delete $targetvars->{_mandatory};
                                 my @targetvars = sort keys %$targetvars;
+                                
+                                # this is a hacky way to allow configuration items like influx_download to be validated by the grammar
+                                # the list is fixed, sadly. Add to it what is relevant for your setup.
+                                my @influxdb_tags = sort qw/connection_type location service upload download service_id modem content_provider title duration size/;
+                                push @targetvars, map { "influx_$_" } @influxdb_tags;
+                                
                                 for (@targetvars) {
                                         # the default values for targetvars are only used in the Probes section
                                         delete $targetvars->{$_}{_default};
