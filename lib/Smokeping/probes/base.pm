@@ -335,6 +335,83 @@ change this parameter afterwards, you'll have to delete the old RRD
 files or somehow convert them.
 DOC
 		},
+		influx_connection_type => {
+			_re => '.*',
+			_example => '',
+			_doc => <<DOC,
+This is a tag (connection_type) that will be sent to influxdb and has no impact on the probe measurement
+DOC
+		},
+        influx_content_provider => {
+			_re => '.*',
+			_example => '',
+			_doc => <<DOC,
+This is a tag (content_provider) that will be sent to influxdb and has no impact on the probe measurement
+DOC
+		},
+        influx_download => {
+			_re => '.*',
+			_example => '',
+			_doc => <<DOC,
+This is a tag (download) that will be sent to influxdb and has no impact on the probe measurement
+DOC
+		},
+        influx_duration => {
+			_re => '.*',
+			_example => '',
+			_doc => <<DOC,
+This is a tag (duration) that will be sent to influxdb and has no impact on the probe measurement
+DOC
+		},
+        influx_location => {
+			_re => '.*',
+			_example => '',
+			_doc => <<DOC,
+This is a tag (location) that will be sent to influxdb and has no impact on the probe measurement
+DOC
+		},
+        influx_modem => {
+			_re => '.*',
+			_example => '',
+			_doc => <<DOC,
+This is a tag (modem) that will be sent to influxdb and has no impact on the probe measurement
+DOC
+		},
+        influx_service => {
+			_re => '.*',
+			_example => '',
+			_doc => <<DOC,
+This is a tag (service) that will be sent to influxdb and has no impact on the probe measurement
+DOC
+		},
+        influx_service_id => {
+			_re => '.*',
+			_example => '',
+			_doc => <<DOC,
+This is a tag (service_id) that will be sent to influxdb and has no impact on the probe measurement
+DOC
+		},
+        influx_size => {
+			_re => '.*',
+			_example => '',
+			_doc => <<DOC,
+This is a tag (size) that will be sent to influxdb and has no impact on the probe measurement
+DOC
+		},
+        influx_title => {
+			_re => '.*',
+			_example => '',
+			_doc => <<DOC,
+This is a tag (title) that will be sent to influxdb and has no impact on the probe measurement
+DOC
+		},
+        influx_upload => {
+			_re => '.*',
+			_example => '',
+			_doc => <<DOC,
+This is a tag (upload) that will be sent to influxdb and has no impact on the probe measurement
+DOC
+		},
 		_mandatory => [],
 	};
 }
