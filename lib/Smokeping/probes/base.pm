@@ -418,6 +418,69 @@ DOC
 This is a tag (upload) that will be sent to influxdb and has no impact on the probe measurement
 DOC
 		},
+		influx_generic1 => {
+			_re => '.*',
+			_example => '',
+			_doc => <<DOC,
+This is a tag (generic1) that will be sent to influxdb and has no impact on the probe measurement
+DOC
+		},
+		influx_generic2 => {
+			_re => '.*',
+			_example => '',
+			_doc => <<DOC,
+This is a tag (generic2) that will be sent to influxdb and has no impact on the probe measurement
+DOC
+		},
+		influx_generic3 => {
+			_re => '.*',
+			_example => '',
+			_doc => <<DOC,
+This is a tag (generic3) that will be sent to influxdb and has no impact on the probe measurement
+DOC
+		},
+		influx_generic4 => {
+			_re => '.*',
+			_example => '',
+			_doc => <<DOC,
+This is a tag (generic4) that will be sent to influxdb and has no impact on the probe measurement
+DOC
+		},
+		influx_generic5 => {
+			_re => '.*',
+			_example => '',
+			_doc => <<DOC,
+This is a tag (generic5) that will be sent to influxdb and has no impact on the probe measurement
+DOC
+		},
+		influx_generic6 => {
+			_re => '.*',
+			_example => '',
+			_doc => <<DOC,
+This is a tag (generic6) that will be sent to influxdb and has no impact on the probe measurement
+DOC
+		},
+		influx_generic7 => {
+			_re => '.*',
+			_example => '',
+			_doc => <<DOC,
+This is a tag (generic7) that will be sent to influxdb and has no impact on the probe measurement
+DOC
+		},
+		influx_generic8 => {
+			_re => '.*',
+			_example => '',
+			_doc => <<DOC,
+This is a tag (generic8) that will be sent to influxdb and has no impact on the probe measurement
+DOC
+		},
+		influx_generic9 => {
+			_re => '.*',
+			_example => '',
+			_doc => <<DOC,
+This is a tag (generic9) that will be sent to influxdb and has no impact on the probe measurement
+DOC
+		},
 	};
 }
 
