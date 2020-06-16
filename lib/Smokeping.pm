@@ -3149,7 +3149,6 @@ DOC
 Database name (where to write the data) within InfluxDB.
 If it doesn't exist, it will be created when writing data.
 DOC
-<<<<<<< HEAD
          },
          username  =>
          {
