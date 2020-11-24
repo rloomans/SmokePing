@@ -1233,6 +1233,7 @@ sub get_detail ($$$$;$){
                 4          => ["4/$p",  '#7e00ff'],
                 int($p/2)  => [int($p/2)."/$p", '#dd00ff'],
                 $p-1       => [($p-1)."/$p",    '#ff0000'],
+                $p         => ["$p/$p", '#a00000']
                 );
     };
     # determine a more 'pastel' version of the ping colours; this is
@@ -1320,7 +1321,7 @@ sub get_detail ($$$$;$){
             my @losssmoke = ();
             my $last = -1;
             foreach my $loss (sort {$a <=> $b} keys %lc){
-                next if $loss >= $pings;
+                next if $loss > $pings;
                 my $lvar = $loss; $lvar =~ s/\./d/g ;
                 push @median,
                    (
@@ -1928,7 +1929,7 @@ sub check_alerts {
                             unless (fork) {
                                 $SIG{CHLD} = 'DEFAULT';
                                 if ($edgetrigger) {
-                                   exec $cmd,$_,$line,$loss,$rtt,$tree->{host}, ($what =~/raise/);
+                                   exec $cmd,$_,$line,$loss,$rtt,$tree->{host}, (($what =~/raise/)? 1 : 0);
                                 } else {
                                    exec $cmd,$_,$line,$loss,$rtt,$tree->{host};
                                 }
