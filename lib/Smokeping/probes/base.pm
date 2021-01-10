@@ -2,7 +2,7 @@ package Smokeping::probes::base;
 
 =head1 301 Moved Permanently
 
-This is a Smokeping probe module. Please use the command 
+This is a Smokeping probe module. Please use the command
 
 C<smokeping -man Smokeping::probes::base>
 
@@ -62,7 +62,7 @@ sub new($$)
 {
     my $this   = shift;
     my $class   = ref($this) || $this;
-    my $self = { properties => shift, cfg => shift, 
+    my $self = { properties => shift, cfg => shift,
     name => shift,
     targets => {}, rtts => {}, addrlookup => {}, rounds_count => 0};
     bless $self, $class;
@@ -73,7 +73,7 @@ sub add($$)
 {
     my $self = shift;
     my $tree = shift;
-    
+
     $self->{target_count}++; # increment this anyway
     return if defined $tree->{nomasterpoll} and $tree->{nomasterpoll} eq "yes";
     $self->{targets}{$tree} = shift;
@@ -90,11 +90,11 @@ sub round ($) {
 
 sub ProbeDesc ($) {
     return "Probe which does not override the ProbeDesc method";
-}    
+}
 
 sub ProbeUnit ($) {
     return "Seconds";
-}    
+}
 
 # this is a read-only variable that should get incremented by
 # the ping() method
@@ -128,10 +128,10 @@ sub target2dynfile ($$) {
 sub rrdupdate_string($$)
 {   my $self = shift;
     my $tree = shift;
-#    print "$tree -> ", join ",", @{$self->{rtts}{$tree}};print "\n";    
+#    print "$tree -> ", join ",", @{$self->{rtts}{$tree}};print "\n";
     # skip invalid addresses
     my $pings = $self->_pings($tree);
-    return "U:${pings}:".(join ":", map {"U"} 1..($pings+1)) 
+    return "U:${pings}:".(join ":", map {"U"} 1..($pings+1))
         unless defined $self->{rtts}{$tree} and @{$self->{rtts}{$tree}} > 0;
     my $entries = scalar @{$self->{rtts}{$tree}};
     my @times = @{$self->{rtts}{$tree}};
@@ -173,7 +173,7 @@ sub addresses($)
 	       my $ip;
 	       chomp($ip = <D>);
 	       close D;
-	       
+
 	       if ( open D, "<$dynbase.snmp" ) {
 		   my $snmp = <D>;
 		   chomp($snmp);
@@ -189,11 +189,11 @@ sub addresses($)
 	       next;
 	   }
 	}
-        $self->{addrlookup}{$target} = () 
+        $self->{addrlookup}{$target} = ()
                 unless defined $self->{addrlookup}{$target};
         push @{$self->{addrlookup}{$target}}, $tree;
 	push @{$addresses}, $target;
-    };    
+    };
     return $addresses;
 }
 
@@ -341,144 +341,11 @@ DOC
 
 sub targetvars {
 	return {_mandatory => [],
-		influx_connection_type => {
+		'/^influx_.+/' => {
 			_re => '.*',
-			_example => '',
+			_example => 'influx_location = In the basement',
 			_doc => <<DOC,
-This is a tag (connection_type) that will be sent to influxdb and has no impact on the probe measurement
-DOC
-		},
-        influx_content_provider => {
-			_re => '.*',
-			_example => '',
-			_doc => <<DOC,
-This is a tag (content_provider) that will be sent to influxdb and has no impact on the probe measurement
-DOC
-		},
-        influx_download => {
-			_re => '.*',
-			_example => '',
-			_doc => <<DOC,
-This is a tag (download) that will be sent to influxdb and has no impact on the probe measurement
-DOC
-		},
-        influx_duration => {
-			_re => '.*',
-			_example => '',
-			_doc => <<DOC,
-This is a tag (duration) that will be sent to influxdb and has no impact on the probe measurement
-DOC
-		},
-        influx_location => {
-			_re => '.*',
-			_example => '',
-			_doc => <<DOC,
-This is a tag (location) that will be sent to influxdb and has no impact on the probe measurement
-DOC
-		},
-        influx_modem => {
-			_re => '.*',
-			_example => '',
-			_doc => <<DOC,
-This is a tag (modem) that will be sent to influxdb and has no impact on the probe measurement
-DOC
-		},
-        influx_service => {
-			_re => '.*',
-			_example => '',
-			_doc => <<DOC,
-This is a tag (service) that will be sent to influxdb and has no impact on the probe measurement
-DOC
-		},
-        influx_service_id => {
-			_re => '.*',
-			_example => '',
-			_doc => <<DOC,
-This is a tag (service_id) that will be sent to influxdb and has no impact on the probe measurement
-DOC
-		},
-        influx_size => {
-			_re => '.*',
-			_example => '',
-			_doc => <<DOC,
-This is a tag (size) that will be sent to influxdb and has no impact on the probe measurement
-DOC
-		},
-        influx_title => {
-			_re => '.*',
-			_example => '',
-			_doc => <<DOC,
-This is a tag (title) that will be sent to influxdb and has no impact on the probe measurement
-DOC
-		},
-        influx_upload => {
-			_re => '.*',
-			_example => '',
-			_doc => <<DOC,
-This is a tag (upload) that will be sent to influxdb and has no impact on the probe measurement
-DOC
-		},
-		influx_generic1 => {
-			_re => '.*',
-			_example => '',
-			_doc => <<DOC,
-This is a tag (generic1) that will be sent to influxdb and has no impact on the probe measurement
-DOC
-		},
-		influx_generic2 => {
-			_re => '.*',
-			_example => '',
-			_doc => <<DOC,
-This is a tag (generic2) that will be sent to influxdb and has no impact on the probe measurement
-DOC
-		},
-		influx_generic3 => {
-			_re => '.*',
-			_example => '',
-			_doc => <<DOC,
-This is a tag (generic3) that will be sent to influxdb and has no impact on the probe measurement
-DOC
-		},
-		influx_generic4 => {
-			_re => '.*',
-			_example => '',
-			_doc => <<DOC,
-This is a tag (generic4) that will be sent to influxdb and has no impact on the probe measurement
-DOC
-		},
-		influx_generic5 => {
-			_re => '.*',
-			_example => '',
-			_doc => <<DOC,
-This is a tag (generic5) that will be sent to influxdb and has no impact on the probe measurement
-DOC
-		},
-		influx_generic6 => {
-			_re => '.*',
-			_example => '',
-			_doc => <<DOC,
-This is a tag (generic6) that will be sent to influxdb and has no impact on the probe measurement
-DOC
-		},
-		influx_generic7 => {
-			_re => '.*',
-			_example => '',
-			_doc => <<DOC,
-This is a tag (generic7) that will be sent to influxdb and has no impact on the probe measurement
-DOC
-		},
-		influx_generic8 => {
-			_re => '.*',
-			_example => '',
-			_doc => <<DOC,
-This is a tag (generic8) that will be sent to influxdb and has no impact on the probe measurement
-DOC
-		},
-		influx_generic9 => {
-			_re => '.*',
-			_example => '',
-			_doc => <<DOC,
-This is a tag (generic9) that will be sent to influxdb and has no impact on the probe measurement
+This is a tag that will be sent to influxdb and has no impact on the probe measurement. The tag name will be sent without the "influx_" prefix, which will be replaced with "tag_" instead. Tags can be used for filtering.
 DOC
 		},
 	};
