@@ -1,6 +1,6 @@
 name: Build Test
 
-on: 
+on:
   push:
     branches:
       - master
@@ -10,17 +10,18 @@ on:
 jobs:
 
   build:
-    
+
     strategy:
       matrix:
         os:
-          - ubuntu-18.04
           - ubuntu-20.04
+          - ubuntu-22.04
+          - ubuntu-latest
           # no libssl on windows
           # - windows-latest
       fail-fast: false
     name: ${{ matrix.os }}
- 
+
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -37,20 +38,20 @@ jobs:
 
     - name: Install dependencies
       run: sudo apt-get install librrds-perl rrdtool dma
-      
+
 
     - name: Bootstrap
       run: ./bootstrap
 
     - name: Configure
       run: ./configure --prefix=$HOME/test-install
-    
+
     - name: Make
       run: make
-      
+
     - name: Dist
       run: make dist
-      
+
     - name: Check Dist
       run: |
         make dist
@@ -66,4 +67,4 @@ jobs:
     - name: Cache Prep
       run: |
         rm -rf thirdparty/Makefile* thirdparty/work
-  
+
