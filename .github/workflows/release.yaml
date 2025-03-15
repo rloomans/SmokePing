@@ -1,0 +1,144 @@
+name: Create Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_release:
+        description: 'Type "release" to confirm you want to create a release'
+        required: true
+        default: ''
+
+jobs:
+  prepare-and-validate:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master' && inputs.confirm_release == 'release'
+    outputs:
+      version: ${{ steps.extract-version.outputs.version }}
+      release_notes: ${{ steps.extract-release-notes.outputs.release_notes }}
+      is_valid: ${{ steps.validate-conditions.outputs.is_valid }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract version from VERSION file
+        id: extract-version
+        run: |
+          VERSION_CONTENT=$(cat VERSION)
+          echo "version=$VERSION_CONTENT" >> $GITHUB_OUTPUT
+          echo "Found version: $VERSION_CONTENT"
+
+      - name: Validate release conditions
+        id: validate-conditions
+        run: |
+          # Get version from VERSION file
+          VERSION_CONTENT=$(cat VERSION)
+          
+          # Get current date in YYYY-MM-DD format
+          CURRENT_DATE=$(date +%Y-%m-%d)
+          
+          # Check first line of CHANGES file contains current date using Perl
+          DATE_CHECK=$(perl -ne 'if ($. == 1 && /'"$CURRENT_DATE"'/) { print "yes"; exit; } exit if $. > 1;' CHANGES)
+          
+          echo "Checking conditions:"
+          echo "1. On master branch: ${{ github.ref == 'refs/heads/master' }}"
+          echo "2. First line of CHANGES contains today's date ($CURRENT_DATE)"
+          echo "   First line check result: $DATE_CHECK"
+          
+          if [[ "$DATE_CHECK" == "yes" ]]; then
+            echo "All conditions met!"
+            echo "is_valid=true" >> $GITHUB_OUTPUT
+          else
+            echo "Release conditions not met:"
+            echo "CHANGES first line should contain today's date: $CURRENT_DATE"
+            echo "is_valid=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+      - name: Extract release notes
+        id: extract-release-notes
+        run: |
+          # Create a temporary file to store the release notes
+          TEMP_FILE=$(mktemp)
+          
+          # Extract the entire first section of CHANGES file using Perl and save to temp file
+          perl -0777 -ne '
+            if (/^((\d{4}-\d{2}-\d{2}).*?)(?=^\d{4}-\d{2}-\d{2}|\z)/ms) {
+              print $1;
+            }
+          ' CHANGES > "$TEMP_FILE"
+          
+          # Use GitHub's approach for multiline outputs
+          echo "release_notes<<EOF" >> $GITHUB_OUTPUT
+          cat "$TEMP_FILE" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          
+          # Also save the release notes as an artifact for debugging
+          mkdir -p release_artifacts
+          cp "$TEMP_FILE" release_artifacts/release_notes.txt
+          
+      - name: Upload release notes for debugging
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-notes
+          path: release_artifacts/
+
+  build-and-release:
+    needs: prepare-and-validate
+    if: needs.prepare-and-validate.outputs.is_valid == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up build environment
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential autoconf automake librrds-perl rrdtool dma
+          
+      - name: Build project
+        run: |        
+          ./bootstrap
+          ./configure --enable-maintainer-mode
+          make
+          make clean
+          make install
+          make dist
+
+      - name: Configure Git
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+      
+      - name: Create and push tag
+        run: |
+          VERSION=${{ needs.prepare-and-validate.outputs.version }}
+          TAG_NAME="v$VERSION"
+          
+          # Check if tag already exists
+          if git rev-parse "$TAG_NAME" >/dev/null 2>&1; then
+            echo "Tag $TAG_NAME already exists"
+            exit 1
+          else
+            echo "Creating tag $TAG_NAME"
+            git tag -a "$TAG_NAME" -m "Release $TAG_NAME"
+            git push origin "$TAG_NAME"
+          fi
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ needs.prepare-and-validate.outputs.version }}
+          files: smokeping-${{ needs.prepare-and-validate.outputs.version }}.tar.gz
+          name: Release v${{ needs.prepare-and-validate.outputs.version }}
+          body: |
+            ${{ needs.prepare-and-validate.outputs.release_notes }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
