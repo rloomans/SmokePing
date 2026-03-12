@@ -1004,14 +1004,14 @@ sub get_overview ($$$$){
 
         }
         my ($graphret,$xs,$ys) = RRDs::graph
-          ($cfg->{General}{imgcache}.$dir."/${prop}_mini.png",
+          ($cfg->{General}{imgcache}.$dir."/${prop}_mini.svg",
     #       '--lazy',
            '--start','-'.exp2seconds($cfg->{Presentation}{overview}{range}),
            '--title',$cfg->{Presentation}{htmltitle} ne 'yes' ? $phys_tree->{title} : '',
            '--height',$cfg->{Presentation}{overview}{height},
            '--width',$cfg->{Presentation}{overview}{width},
            '--vertical-label', $ProbeUnit,
-           '--imgformat','PNG',
+           '--imgformat','SVG',
            Smokeping::Graphs::get_colors($cfg),
            '--alt-autoscale-max',
            '--alt-y-grid',
@@ -1030,7 +1030,7 @@ sub get_overview ($$$$){
         } else {
          $page.="<A HREF=\"".lnk($q, (join ".", @$open, ${prop}))."\">".
             "<IMG ALT=\"\" WIDTH=\"$xs\" HEIGHT=\"$ys\" ".
-            "SRC=\"".$cfg->{General}{imgurl}.$dir."/${prop}_mini.png\"></A>";
+            "SRC=\"".$cfg->{General}{imgurl}.$dir."/${prop}_mini.svg\"></A>";
         }
         $page .="</div></div>\n";
     }
@@ -1219,7 +1219,7 @@ sub get_detail ($$$$;$){
         my $name = $slave ? " as seen from ". $cfg->{Slaves}{$slave}{display_name} : "";
         mkdir $cfg->{General}{imgcache}."/__navcache",0755  unless -d  $cfg->{General}{imgcache}."/__navcache";
         # remove old images after one hour
-        my $pattern = $cfg->{General}{imgcache}."/__navcache/*.png";
+        my $pattern = $cfg->{General}{imgcache}."/__navcache/*.svg";
         for (glob $pattern){
                 unlink $_ if time - (stat $_)[9] > 3600;
         }
@@ -1251,7 +1251,7 @@ sub get_detail ($$$$;$){
         # chart mode
         mkdir $cfg->{General}{imgcache}."/__chartscache",0755  unless -d  $cfg->{General}{imgcache}."/__chartscache";
         # remove old images after one hour
-        my $pattern = $cfg->{General}{imgcache}."/__chartscache/*.png";
+        my $pattern = $cfg->{General}{imgcache}."/__chartscache/*.svg";
         for (glob $pattern){
                 unlink $_ if time - (stat $_)[9] > 3600;
         }
@@ -1458,7 +1458,7 @@ sub get_detail ($$$$;$){
                 $title = "$desc from " . ($s ? $cfg->{Slaves}{$slave}{display_name}: $cfg->{General}{display_name} || hostname) . " to $phys_tree->{title}";
             }
             my @task =
-               ("${imgbase}${s}_${end}_${start}.png",
+               ("${imgbase}${s}_${end}_${start}.svg",
                @lazy,
                '--start',$realstart,
                ($end ne 'last' ? ('--end',$end) : ()),
@@ -1470,7 +1470,7 @@ sub get_detail ($$$$;$){
                @log,
                '--lower-limit',(@log ? ($max->{$s}{$start} > 0.01) ? '0.001' : '0.0001' : '0'),
                '--vertical-label',$ProbeUnit,
-               '--imgformat','PNG',
+               '--imgformat','SVG',
                Smokeping::Graphs::get_colors($cfg),
                (map {"DEF:ping${_}=${rrd}:ping${_}:AVERAGE"} 1..$pings),
                (map {"CDEF:cp${_}=ping${_},$max->{$s}{$start},LT,ping${_},INF,IF"} 1..$pings),
@@ -1504,15 +1504,15 @@ sub get_detail ($$$$;$){
         }
 
         if ($mode eq 'a'){ # ajax mode
-             open my $img, "${imgbase}_${end}_${start}.png" or die "${imgbase}_${end}_${start}.png: $!";
+             open my $img, "${imgbase}_${end}_${start}.svg" or die "${imgbase}_${end}_${start}.svg: $!";
              binmode $img;
-             print "Content-Type: image/png\n";
+             print "Content-Type: image/svg+xml\n";
              my $data;
              read($img,$data,(stat($img))[7]);
              close $img;
              print "Content-Length: ".length($data)."\n\n";
              print $data;
-             unlink "${imgbase}_${end}_${start}.png";
+             unlink "${imgbase}_${end}_${start}.svg";
              return undef;
         }
         elsif ($mode eq 'n'){ # navigator mode
@@ -1522,8 +1522,12 @@ sub get_detail ($$$$;$){
                 $page .= "<div class=\"".panel_heading_class()."\"><h2>$desc</h2></div>";
             }
            $page .= "<div class=\"panel-body\">";
-           $page .= qq|<IMG alt="" id="zoom" width="$xs{''}" height="$ys{''}" SRC="${imghref}_${end}_${start}.png">| ;
-           $page .= $q->start_form(-method=>'POST', -id=>'range_form', -action=>$cfg->{General}{cgiurl})
+           $page .= qq|<IMG alt="" id="zoom" width="$xs{''}" height="$ys{''}" SRC="${imghref}_${end}_${start}.svg">| ;
+           $page .= $q->start_form(
+                 -method => 'POST',
+                 -id     => 'range_form',
+                 -action => cgiurl($q, $cfg),
+             )
               . "<p>Time range: "
               . $q->hidden(-name=>'epoch_start',-id=>'epoch_start')
               . $q->hidden(-name=>'hierarchy',-id=>'hierarchy')
@@ -1553,15 +1557,15 @@ sub get_detail ($$$$;$){
                     $page .= "<div class=\"".panel_heading_class()."\"><h2>$title</h2></div>";
                 }
                 $page .= "<div class=\"panel-body\">";
-                $page .= ( qq{<a href="}.cgiurl($q,$cfg)."?".hierarchy($q).qq{displaymode=n;start=$startstr;end=now;}."target=".$t.$s.'">'
-                      . qq{<IMG ALT="" SRC="${imghref}${s}_${end}_${start}.png">}."</a>" ); #"
+                $page .= ( qq{<a href="}.cgiurl($q,$cfg)."?".hierarchy($q).qq{displaymode=n&start=$startstr&end=now&}."target=".$t.$s.'">'
+                      . qq{<IMG ALT="" SRC="${imghref}${s}_${end}_${start}.svg">}."</a>" ); #"
                 $page .= "</div></div>\n";
             }
         } else { # chart mode
             $page .= qq{<div class="panel-body">};
             my $href= (split /~/, (join ".", @$open))[0]; #/ # the link is 'slave free'
             $page .= (  qq{<a href="}.lnk($q, $href).qq{">}
-                      . qq{<IMG ALT="" SRC="${imghref}_${end}_${start}.png">}."</a>" ); #"
+                      . qq{<IMG ALT="" SRC="${imghref}_${end}_${start}.svg">}."</a>" ); #"
             $page .= "</div>";
 
         }
@@ -2497,26 +2501,33 @@ DOC
                 /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/ && return undef;
                 /^[0-9a-f]{0,4}(\:[0-9a-f]{0,4}){0,6}\:[0-9a-f]{0,4}$/i && return undef;
                 m|(?:/$KEYD_RE)+(?:~$KEYD_RE)?(?: (?:/$KEYD_RE)+(?:~$KEYD_RE))*| && return undef;
-                my $addressfound = 0;
-                my @tried;
-                if ($havegetaddrinfo) {
-                    my @ai;
-                    @ai = getaddrinfo( $_, "" );
-                    unless ($addressfound = scalar(@ai) > 5) {
-                        do_debuglog("WARNING: Hostname '$_' does currently not resolve to an IPv6 address\n");
-                        @tried = qw{IPv6};
+                # Skip DNS validation in CGI mode: the lookups block on DNS
+                # timeouts during network outages, causing 40+ second page loads
+                # or gateway timeouts (see GH#101, GH#366). The warning below is
+                # already suppressed in CGI mode, so there is no benefit to
+                # performing the lookups there.
+                unless ($cgimode) {
+                    my $addressfound = 0;
+                    my @tried;
+                    if ($havegetaddrinfo) {
+                        my @ai;
+                        @ai = getaddrinfo( $_, "" );
+                        unless ($addressfound = scalar(@ai) > 5) {
+                            do_debuglog("WARNING: Hostname '$_' does currently not resolve to an IPv6 address\n");
+                            @tried = qw{IPv6};
+                        }
                     }
-                }
-                unless ($addressfound) {
-                   unless ($addressfound = gethostbyname( $_ )) {
-                        do_debuglog("WARNING: Hostname '$_' does currently not resolve to an IPv4 address\n");
-                        push @tried, qw{IPv4};
-                   }
-                }
-                unless ($addressfound) {
-                   # do not bomb, as this could be temporary
-                   my $tried = join " or ", @tried;
-                   warn "WARNING: Hostname '$_' does currently not resolve to an $tried address\n" unless $cgimode;
+                    unless ($addressfound) {
+                       unless ($addressfound = gethostbyname( $_ )) {
+                            do_debuglog("WARNING: Hostname '$_' does currently not resolve to an IPv4 address\n");
+                            push @tried, qw{IPv4};
+                       }
+                    }
+                    unless ($addressfound) {
+                       # do not bomb, as this could be temporary
+                       my $tried = join " or ", @tried;
+                       warn "WARNING: Hostname '$_' does currently not resolve to an $tried address\n";
+                    }
                 }
                 return undef;
             }
@@ -3255,7 +3266,7 @@ DOC
           _sections => [ qw(overview detail charts multihost hierarchies) ],
           _mandatory => [ qw(overview template detail) ],
           _vars      => [ qw (template charset htmltitle graphborders literalsearch colortext colorbackground colorborder) ],
-          template   => 
+          template   =>
          {
           _doc => <<DOC,
 The webpage template must contain keywords of the form

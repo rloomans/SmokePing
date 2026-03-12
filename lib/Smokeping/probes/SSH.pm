@@ -2,7 +2,7 @@ package Smokeping::probes::SSH;
 
 =head1 301 Moved Permanently
 
-This is a Smokeping probe module. Please use the command 
+This is a Smokeping probe module. Please use the command
 
 C<smokeping -man Smokeping::probes::SSH>
 
@@ -37,8 +37,8 @@ the amount specified in the config File.
 As part of the initialization, the probe asks 127.0.0.1 for it's public key
 and tries to parse the output. This is to ensure that the specified ssh-keyscan
 binary provides output in the expected formatm before relying on it.Make sure
-you have SSH running on the localhost as well, or specify an alternative 
-init_host target to test against, that is expected to be available during any 
+you have SSH running on the localhost as well, or specify an alternative
+init_host target to test against, that is expected to be available during any
 smokeping restart.
 DOC
 		authors => <<'DOC',
@@ -57,8 +57,7 @@ sub new($$$)
 
     # no need for this if we run as a cgi
     unless ( $ENV{SERVER_SOFTWARE} ) {
-        
-        my $call = "$self->{properties}{binary} -t dsa,rsa,ecdsa $self->{properties}{init_host}";
+        my $call = "$self->{properties}{binary} -t rsa,ecdsa,ed25519 $self->{properties}{init_host}";
         my $return = `$call 2>&1`;
         if ($return =~ m/$ssh_re/s){
             print "### parsing ssh-keyscan output...OK\n";
@@ -152,19 +151,19 @@ sub targetvars {
         return $class->_makevars($class->SUPER::targetvars, {
            keytype => {
                _doc => "Type of key, used in ssh-keyscan -t I<keytype>",
-	       _re => "[ecdr]sa*",
-               _example => 'dsa',
+	             _re => "(rsa|ecdsa|ed25519)",
+               _example => 'ecdsa',
                _default => 'rsa',
            },
            port => {
                _doc => "Port to use when testing the ssh connection -p I<port>",
-	       _re => '\d+',
+	             _re => '\d+',
                _example => '5000',
                _default => '22',
            },
            ssh_af => {
                _doc => "Address family (IPv4/IPV6) to use when testing the ssh connection, specify 4 or 6.  Specify 0 to reset to default system preference, instead of inheriting the value from parent sections.",
-	       _re => '\d+',
+	            _re => '\d+',
                _example => '4',
                _default => '0',
            },

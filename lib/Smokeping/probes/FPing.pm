@@ -2,7 +2,7 @@ package Smokeping::probes::FPing;
 
 =head1 301 Moved Permanently
 
-This is a Smokeping probe module. Please use the command 
+This is a Smokeping probe module. Please use the command
 
 C<smokeping -man Smokeping::probes::FPing>
 
@@ -26,10 +26,10 @@ sub pod_hash {
 Smokeping::probes::FPing - FPing Probe for SmokePing
 DOC
               description => <<DOC,
-Integrates FPing as a probe into smokeping. The variable B<binary> must 
-point to your copy of the FPing program.  If it is not installed on 
+Integrates FPing as a probe into smokeping. The variable B<binary> must
+point to your copy of the FPing program.  If it is not installed on
 your system yet, you can get a slightly enhanced version from L<www.smokeping.org/pub>.
-  
+
 The (optional) B<packetsize> option lets you configure the packetsize for the pings sent.
 
 Since version 3.3 fping sends its statistics to stdout. Set B<usestdout> to 'true'
@@ -69,9 +69,10 @@ sub new($$$)
         my $return = `$binary -C 1 $testhost 2>&1`;
         $self->{enable}{S} = (`$binary -h 2>&1` =~ /\s-S[,\s]/);
         $self->{enable}{O} = (`$binary -h 2>&1` =~ /\s-O[,\s]/);
+        $self->{enable}{fwmark} = (`$binary -h 2>&1` =~ /\s-k[,\s]/);
         croak "ERROR: fping ('$binary -C 1 $testhost') could not be run: $return"
             if $return =~ m/not found/;
-        croak "ERROR: FPing must be installed setuid root or it will not work\n" 
+        croak "ERROR: FPing must be installed setuid root or it will not work\n"
             if $return =~ m/only.+root/;
 
         if ($return =~ m/bytes, ([0-9.]+)\sms\s+.*\n.*\n.*:\s+([0-9.]+)/ and $1 > 0){
@@ -139,6 +140,11 @@ sub ping ($){
     }
     push @params, "-O$self->{properties}{tos}" if $self->{properties}{tos} and $self->{enable}{O};
 
+    if ($self->rounds_count == 1 and $self->{properties}{fwmark} and not $self->{enable}{fwmark}){
+       $self->do_log("WARNING: your fping binary doesn't support fwmark setting (-k), I will ignore any fwmark configurations.");
+    }
+    push @params, "-k$self->{properties}{fwmark}" if $self->{properties}{fwmark} and $self->{enable}{fwmark};
+
     my $pings =  $self->pings;
     if (($self->{properties}{blazemode} || '') eq 'true'){
         $pings++;
@@ -159,7 +165,7 @@ sub ping ($){
         my @times = split /\s+/;
         my $ip = shift @times;
         next unless ':' eq shift @times; #drop the colon
-        if (($self->{properties}{blazemode} || '') eq 'true'){     
+        if (($self->{properties}{blazemode} || '') eq 'true'){
              shift @times;
         }
         @times = map {sprintf "%.10e", $_ / $self->{pingfactor}} sort {$a <=> $b} grep /^\d/, @times;
@@ -202,11 +208,22 @@ sub probevars {
 			_sub => sub {
 				my ($val) = @_;
         			return "ERROR: FPing packetsize must be between 12 and 64000"
-              				if ( $val < 12 or $val > 64000 ); 
+              				if ( $val < 12 or $val > 64000 );
 				return undef;
 			},
 			_doc => "The ping packet size (in the range of 12-64000 bytes).",
 
+        },
+        fwmark => {
+            _re => '\d+|0x[0-9a-zA-Z]+',
+            _example => 1,
+            _sub => sub {
+                my ($val) = @_;
+                return "ERROR: FPing fwmark must be between 1 and 4294967295"
+                    if ( $val < 1 or $val > 4294967295 );
+                return undef;
+            },
+            _doc => "The fwmark (in the range of 1-4294967295).",
 		},
 		blazemode => {
 			_re => '(true|false)',
